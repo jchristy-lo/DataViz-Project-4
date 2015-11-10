@@ -1,0 +1,12 @@
+.container {
+    background-color: lightgrey;
+    height: 100%;
+}
+
+.center {
+    text-align: center;
+}
+
+#mainQuestion {
+    text-align: center;
+}
