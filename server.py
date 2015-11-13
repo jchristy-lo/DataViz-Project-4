@@ -26,9 +26,9 @@ def pullData ():
     cur = conn.cursor()
 
     try: 
-        cur.execute("""SELECT year, Cause_Recode_39, sex, race, SUM(1) as total 
+        cur.execute("""SELECT year, Cause_Recode_39, sex, race_recode_5 as race, SUM(1) as total 
                        FROM mortality
-                       GROUP BY year, Cause_Recode_39, sex, race
+                       GROUP BY year, Cause_Recode_39, sex, race_recode_5
                        LIMIT 100""")
 
         data = [{"year":int(year),

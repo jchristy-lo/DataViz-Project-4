@@ -6,8 +6,7 @@ var GLOBAL = {
         filterSex: [],
         filterRace: [],
         filterCause: [],
-        causes: CAUSE,
-        races: RACE
+        fData: {}
 }
 
 function run() {
@@ -20,12 +19,21 @@ function run() {
 		.text("loading data...");
 
     getData("","",function(data) {
+    	GLOBAL.data=data;
     	timelineView(data);
       //createView(data)
        });
 }
 
-function filter(sex,race,cause){}
+function filter(){
+	if(filterSex.length===0 & filterRace.length===0 & filterCause.length===0){
+		GLOBAL.fData=GLOBAL.data;
+	}else{
+		fData=[];
+		GLOBAL.fData.data.forEach(function (r) {
+    });
+	}
+}
 
 function getTotal (data,cause,year) {
     if (cause in data) { 
@@ -39,7 +47,6 @@ function getTotal (data,cause,year) {
 }
 
 function timelineView (data){
-
 	var svg = d3.select("#timeline");
 
 	// note: the width attribute holds strings
@@ -47,7 +54,9 @@ function timelineView (data){
     var x2008 = +svg.attr("width")*1/2;
     var x2013 = +svg.attr("width")*8/9;
 
-    var causes = Object.keys(CAUSE);
+    var causes = GLOBAL.data["causes"];
+
+    console.log(causes);
     max2013 = d3.max(causes.map(function(d) { return getTotal(data,d,"2013"); }));
     max2008 = d3.max(causes.map(function(d) { return getTotal(data,d,"2008"); }));
     max2003 = d3.max(causes.map(function(d) { return getTotal(data,d,"2003"); }));
@@ -103,7 +112,8 @@ function timelineView (data){
 		.style("stroke-width","6px");
 
     g.on("mouseover",function (d,i) {  
-	d3.select(this).select("line").style("stroke","blue");
+	d3.select(this).selectAll("line").style("stroke","blue");
+	d3.select(this).selectAll("circle").style("stroke","blue");
 	d3.select(this)
 	    .append("text")
 	    .attr("class","label")
@@ -138,8 +148,12 @@ function getData (sex,race,f) {
 }
 
 var RACE = {
-	"01":"???",
-	"02":"????"
+	"0": "Other",
+	"1": "White",
+	"2": "Black",
+	"3": "American Indian",
+	"4": "Asian/Pacific Islander"
+
 }
 
 var CAUSE = {
