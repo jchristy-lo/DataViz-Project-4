@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Testing Mortality Data Pull</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+  </head>
+  
+  <body>
+    <div id="data"></div>
+    <script>
+      
+window.addEventListener("load",run);
+
+function run () {
+    var p = d3.select("#data");
+    p.append("text")
+	.attr("id","loading")
+	.attr("dy","0.35em")
+	.text("loading data...");
+
+    getData("","",function(data) {
+      createView(data)
+       });
+}
+
+/* 
+ * Simple check of data
+ */
+
+function createView (data) {
+
+    i=0;
+    data.data.forEach(function(r) {
+    var row = "year: "+r["year"]+", total: "+r["total"]+", cause: "+r["cause"];
+    row = row +", sex: "+r["sex"]+", race: "+r["race"]+"\n";
+    d3.select("#data")
+        .append("p")
+        .append("text")
+        .attr("x",5)
+        .attr("dy","0.35em")
+        .style("stroke","black")
+        .style("text-anchor","start")
+        .text(row)
+    i+=10;
+        });
+}
+
+function getData (sex,race,f) {
+
+    d3.json("data")
+	.header("Content-Type", "application/x-www-form-urlencoded")
+	.get("sex="+encodeURIComponent(sex)+"%race="+encodeURIComponent(race),
+	     function(error,data) {
+		 if (error) {
+		     d3.select("#loading").remove();
+		     console.log(error);
+		 } else {
+		     d3.select("#loading").remove();
+		     console.log(" data =", data);
+		     f(data);
+		 }
+	     });
+}
+      
+    </script>
+  </body>
+</html>
