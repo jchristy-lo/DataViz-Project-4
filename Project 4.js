@@ -1,7 +1,7 @@
 window.addEventListener("load", run);
 
-var GLOBAL = { 
-        data: [],
+var GLOBAL = {
+    data: [],
 		color: ["cyan","magenta","yellow","white","blue","red","green"],
         filterSex: [],
         filterRace: [],
@@ -22,15 +22,16 @@ function run() {
     getData("","",function(data) {
     	timelineView(data);
       //createView(data)
+      updateRaceView();
        });
 }
 
 function filter(sex,race,cause){}
 
 function getTotal (data,cause,year) {
-    if (cause in data) { 
+    if (cause in data) {
 	if (year in data[cause]) {
-	    if (data[cause][year].length > 0) { 
+	    if (data[cause][year].length > 0) {
 		return data[cause][year][0].total;
 	    }
 	}
@@ -55,11 +56,11 @@ function timelineView (data){
     var y2003 = function(d) { return y(getTotal(data,d,"2003")); };
     var y2008 = function(d) { return y(getTotal(data,d,"2008")); };
     var y2013 = function(d) { return y(getTotal(data,d,"2013")); };
-    
+
     var y = d3.scale.linear()
 		.domain([0,Math.max(max2008,max2013,max2003)])
 		.range([+svg.attr("height")-10,10]);
-    
+
     var g = svg.selectAll("g")
 		.data(causes)
 		.enter()
@@ -102,7 +103,7 @@ function timelineView (data){
 		.style("stroke","red")
 		.style("stroke-width","6px");
 
-    g.on("mouseover",function (d,i) {  
+    g.on("mouseover",function (d,i) {
 	d3.select(this).select("line").style("stroke","blue");
 	d3.select(this)
 	    .append("text")
@@ -114,7 +115,7 @@ function timelineView (data){
 	    .style("text-anchor","start")
 	    .text(function(d) { return CAUSE[d]; }) })
 
-	.on("mouseout",function() { 
+	.on("mouseout",function() {
 	d3.select(this).select("line").style("stroke","red");
 	    d3.selectAll(".label").remove();
 	});
@@ -135,6 +136,18 @@ function getData (sex,race,f) {
 		     f(data);
 		 }
 	     });
+}
+
+
+function updateRaceView()
+{
+  // Calculate race totals
+  var totals = []
+  for (race in GLOBAL.races)
+  {
+    console.log(race);
+    totals[race] = 50; // the actual total
+  }
 }
 
 var RACE = {
