@@ -20,7 +20,7 @@ function run() {
 
     getData("","",function(data) {
     	GLOBAL.data=data;
-    	timelineView(data);
+    	timelineView(data.data);
       //createView(data)
        });
 }
@@ -36,13 +36,10 @@ function filter(){
 }
 
 function getTotal (data,cause,year) {
-    if (cause in data) { 
-	if (year in data[cause]) {
-	    if (data[cause][year].length > 0) { 
-		return data[cause][year][0].total;
-	    }
+    if (cause===data.cause) { 
+		if (year===data.year) {
+		    return data.total;}
 	}
-    }
     return 0;
 }
 
@@ -54,65 +51,79 @@ function timelineView (data){
     var x2008 = +svg.attr("width")*1/2;
     var x2013 = +svg.attr("width")*8/9;
 
-    var causes = GLOBAL.data["causes"];
+    var y = function(deaths){return (540-deaths/maxDeath*(530));}
 
-    console.log(causes);
-    max2013 = d3.max(causes.map(function(d) { return getTotal(data,d,"2013"); }));
-    max2008 = d3.max(causes.map(function(d) { return getTotal(data,d,"2008"); }));
-    max2003 = d3.max(causes.map(function(d) { return getTotal(data,d,"2003"); }));
+	var y2003 = {};
+	var y2008 = {};
+	var y2013 = {};
 
-    var y2003 = function(d) { return y(getTotal(data,d,"2003")); };
-    var y2008 = function(d) { return y(getTotal(data,d,"2008")); };
-    var y2013 = function(d) { return y(getTotal(data,d,"2013")); };
+	GLOBAL.data["causes"].forEach(function(cause){
+	    y2003[cause] = 0;
+	    y2008[cause] = 0;
+	    y2013[cause] = 0;
+    })
+
+    var maxDeath = 0
+
+    data.forEach(function(datum){
+	    if(datum["year"]===2003){
+	    	y2003[datum["cause"]] += datum.total;
+	    	if(y2003[datum["cause"]]>maxDeath){maxDeath=y2003[datum["cause"]];}
+	    }
+	    if(datum["year"]===2008){
+	    	y2008[datum["cause"]] += datum.total;
+	    	if(y2008[datum["cause"]]>maxDeath){maxDeath=y2008[datum["cause"]];}
+	    }
+	    if(datum["year"]===2013){
+	    	y2013[datum["cause"]] += datum.total;
+	    	if(y2003[datum["cause"]]>maxDeath){maxDeath=y2003[datum["cause"]];}
+	    }
+    })
+
+    GLOBAL.data["causes"].forEach(function(cause){    
     
-    var y = d3.scale.linear()
-		.domain([0,Math.max(max2008,max2013,max2003)])
-		.range([+svg.attr("height")-10,10]);
-    
-    var g = svg.selectAll("g")
-		.data(causes)
-		.enter()
-		.append("g")
+    // var g = svg.selectAll("g")
 
-	g.append("circle")
+	svg.append("circle")
 		.attr("cx",x2003)
-		.attr("cy",y2003)
+		.attr("cy",y(y2003[cause]))
 		.attr("r","5")
 		.style("fill","red")
-		.style("stroke","none");
+		.style("stroke","red");
 
-    g.append("circle")
+    svg.append("circle")
 		.attr("cx",x2008)
-		.attr("cy",y2008)
+		.attr("cy",y(y2008[cause]))
 		.attr("r","5")
 		.style("fill","red")
-		.style("stroke","none");
+		.style("stroke","red");
 
-    g.append("circle")
-		.attr("cx",x2013)
-		.attr("cy",y2013)
-		.attr("r","5")
-		.style("fill","red")
-		.style("stroke","none");
+  //   g.append("circle")
+		// .attr("cx",x2013)
+		// .attr("cy",y2013[cause])
+		// .attr("r","5")
+		// .style("fill","red")
+		// .style("stroke","red");
 
-    g.append("line")
+    svg.append("line")
     	.attr("x1",x2003)
-		.attr("y1",y2003)
+		.attr("y1",y(y2003[cause]))
 		.attr("x2",x2008)
-		.attr("y2",y2008)
+		.attr("y2",y(y2008[cause]))
 		.style("stroke","red")
 		.style("stroke-width","6px");
 
-	g.append("line")
-    	.attr("x1",x2008)
-		.attr("y1",y2008)
-		.attr("x2",x2013)
-		.attr("y2",y2013)
-		.style("stroke","red")
-		.style("stroke-width","6px");
+	// g.append("line")
+ //    	.attr("x1",x2008)
+	// 	.attr("y1",y2008[cause])
+	// 	.attr("x2",x2013)
+	// 	.attr("y2",y2013[cause])
+	// 	.style("stroke","red")
+	// 	.style("stroke-width","6px");
 
-    g.on("mouseover",function (d,i) {  
-	d3.select(this).selectAll("line").style("stroke","blue");
+    svg.selectAll("line")
+    	.on("mouseover",function (d,i) {  
+	d3.select(this).select("line").style("stroke","blue");
 	d3.select(this).selectAll("circle").style("stroke","blue");
 	d3.select(this)
 	    .append("text")
@@ -125,9 +136,12 @@ function timelineView (data){
 	    .text(function(d) { return CAUSE[d]; }) })
 
 	.on("mouseout",function() { 
-	d3.select(this).select("line").style("stroke","red");
+	d3.select(this).selectAll("line").style("stroke","red");
+	d3.select(this).selectAll("circle").style("stroke","red");
 	    d3.selectAll(".label").remove();
 	});
+
+    })
 }
 
 function getData (sex,race,f) {

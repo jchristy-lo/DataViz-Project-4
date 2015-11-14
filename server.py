@@ -29,7 +29,7 @@ def pullData ():
         cur.execute("""SELECT year, Cause_Recode_39, sex, race_recode_5 as race, SUM(1) as total 
                        FROM mortality
                        GROUP BY year, Cause_Recode_39, sex, race_recode_5
-                       LIMIT 100""")
+                       LIMIT 500""")
 
         data = [{"year":int(year),
                  "cause":int(cause),
