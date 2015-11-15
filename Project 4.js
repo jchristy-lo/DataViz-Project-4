@@ -23,6 +23,7 @@ function run() {
     	timelineView(data);
       //createView(data)
       updateRaceView();
+      updateSexView();
        });
 }
 
@@ -36,15 +37,58 @@ function filter(){
 	}
 }
 
-function getTotal (data,cause,year) {
-    if (cause in data) {
-	if (year in data[cause]) {
-	    if (data[cause][year].length > 0) {
-		return data[cause][year][0].total;
-	    }
-	}
-    }
+function getTotal(data,cause,year) {
+  if (cause in data) {
+  	if (year in data[cause]) {
+  	  if (data[cause][year].length > 0) {
+  		  return data[cause][year][0].total;
+  	  }
+  	}
+  }
     return 0;
+}
+
+function getTotals(data, cause, race, sex, year)
+{
+  // GLOBAL.fData.forEach(function(d)
+  // {
+  //   console.log(d);
+  // })
+  console.log("in get totals");
+  console.log(GLOBAL.data.data);
+  console.log("cause: " + cause + " race: " + race + " sex: " + sex);
+  // if (GLOBAL.)
+  var total = 0;
+  for (i in GLOBAL.data.data)
+  {
+    datapt = GLOBAL.data.data[i]
+    console.log(datapt[cause]);
+    console.log(datapt[race]);
+    console.log(datapt[sex]);
+    if (datapt[cause] == cause && datapt[race] == race && datapt[sex] == sex)
+    {
+      totals++;
+    }
+  }
+  // data.forEach(function(datum){
+  //   if(datum["year"]===2003)
+  //   {
+  //     y2003[datum["cause"]] += datum.total;
+  //     if(y2003[datum["cause"]]>maxDeath)
+  //     {
+  //       maxDeath=y2003[datum["cause"]];
+  //     }
+  //   }
+  //   if(datum["year"]===2008)
+  //   {
+  //     y2008[datum["cause"]] += datum.total;
+  //     if(y2008[datum["cause"]]>maxDeath){maxDeath=y2008[datum["cause"]];}
+  //   }
+  //   if(datum["year"]===2013){
+  //   y2013[datum["cause"]] += datum.total;
+  //   if(y2003[datum["cause"]]>maxDeath){maxDeath=y2003[datum["cause"]];}
+  //   }
+  // })
 }
 
 function timelineView (data){
@@ -151,13 +195,267 @@ function getData (sex,race,f) {
 
 function updateRaceView()
 {
+  // getTotals(GLOBAL.data, "1", "1", "M", "2003");
   // Calculate race totals
-  var totals = []
-  for (race in GLOBAL.races)
+  var races = []
+  var total_count = 0
+  for (i in RACE)
   {
-    console.log(race);
-    totals[race] = 50; // the actual total
+    // console.log(i);
+    var race = RACE[i]
+    // console.log(race);
+    var total = 50*i // the actual total
+
+    // console.log(total);
+    races[i] = {}
+    races[i]["index"] = i;
+    races[i]["race"] = race;
+    races[i]["total"] = total;
+    total_count += total;
   }
+  // console.log(totals);
+
+  // calculate the race percents
+  for (i in races)
+  {
+    // console.log(i);
+    races[i]["percent"] = (100 * races[i]["total"] / total_count)
+  }
+  // console.log(races);
+
+  var svg = d3.select("#race");
+
+  // Margins
+  var height = svg.attr("height");
+  var width = svg.attr("width");
+  var margin_y = 15;
+  var margin_x = 10;
+  // Wedge size variables
+  var radius = (height - 2*margin_y) / 2;
+  var radius_in = radius/2;
+  var theta_prev = 0;
+
+  // console.log(height);
+
+  // // Title
+  // svg.append("text")
+  //   .attr("id","title")
+  //   .attr("x", width/2)
+  //   .attr("y", margin_y/2)
+  //   .attr("dy","0.3em")
+  //   .style("text-anchor","middle")
+  //   .text(question);
+
+  // Caption
+  var caption = svg.append("text")
+    .attr("x", width/2)
+    .attr("y", height - margin_y/2)
+    .attr("dy","0.3em")
+    .style("text-anchor","middle")
+    .text("Hover over wedges to see information");
+
+  // console.log(races);
+  var thislist = [10,20,30,40]
+  // Create wedges
+  var wedges = svg.selectAll("path")
+    .data(races) // bind data
+    .enter()
+    .append("path") // Make wedge out of path objects
+    .attr("d", function(d){
+      // Function to calculate wedge shape based on data
+      // console.log(d);
+      // value = 20;
+      value = d["percent"];
+      // Wedge shape
+      var theta_new = value * Math.PI * 2 / 100;
+      var center_x = width/2;
+      var center_y = height/2;
+      var x_0 = radius * Math.sin(theta_prev) + center_x;
+      var y_0 = -1*radius * Math.cos(theta_prev) + center_y;
+      var x_0_in = radius_in * Math.sin(theta_prev) + center_x;
+      var y_0_in = -1*radius_in * Math.cos(theta_prev) + center_y;
+      var x_f = radius * Math.sin(theta_prev + theta_new) + center_x;
+      var y_f = -1*radius * Math.cos(theta_prev + theta_new) + center_y;
+      var x_f_in = radius_in * Math.sin(theta_prev + theta_new) + center_x;
+      var y_f_in = -1*radius_in * Math.cos(theta_prev + theta_new) + center_y;
+      if (theta_new < Math.PI)
+      {
+        var path_string = "M"+x_0+","+y_0+
+                          " A" + radius + "," + radius + " 0 0,1 " + x_f + "," + y_f +
+                          " L"+x_f_in+","+y_f_in +
+                          " A" + radius_in + "," + radius_in + " 0 0,0 " + x_0_in + "," + y_0_in;
+      }
+      else // path needs different of params for theta > 180 degrees
+      {
+        var path_string = "M"+x_0+","+y_0+
+                          " A" + radius + "," + radius + " 0 1,1 " + x_f + "," + y_f +
+                          " L"+x_f_in+","+y_f_in +
+                          " A" + radius_in + "," + radius_in + " 0 1,0 " + x_0_in + "," + y_0_in;
+      }
+      // This is to account for the offset of where to start subsequent wedges
+      theta_prev += theta_new;
+      return path_string;
+    })
+    .attr("fill", function(d){
+      return GLOBAL.color[d["index"]];
+    })
+    .attr("stroke", "#BBBBBB")
+    .attr("stroke-width", "2")
+    .on("mouseover",function(d) {
+      // When mouseover, change wedge color and display caption info
+      this.style.fill = "#778888";
+      caption.text(d["race"] + ": " + Math.round(d["percent"]) + "%");
+  	})
+    .on("mouseout",function(d) {
+      // Reset to standard color and reset caption
+      this.style.fill = GLOBAL.color[d["index"]];
+      caption.text("Hover over wedges to see information");
+    })
+    .on("click",function(d){
+      // console.log("clicked");
+      // console.log(d["race"]);
+      race = d["race"]
+      if (GLOBAL.filterRace.indexOf(race) > -1)//race in GLOBAL.filterRace)
+      {
+        // console.log("in list");
+        GLOBAL.filterRace.splice(GLOBAL.filterRace.indexOf(race), 1);
+        this.style.stroke = "#BBBBBB";
+      }
+      else
+      {
+        this.style.stroke = "#000000";
+
+        GLOBAL.filterRace.push(race);
+      }
+    })
+}
+
+function updateSexView()
+{
+  // getTotals(GLOBAL.data, "1", "1", "M", "2003");
+  // Calculate race totals
+  var sexes = []
+  var total_count = 0
+  for (i in SEX)
+  {
+    // console.log(i);
+    var sex = SEX[i]
+    // console.log(race);
+    var total = 50*i // the actual total
+
+    // console.log(total);
+    sexes[i-1] = {}
+    sexes[i-1]["index"] = i-1;
+    sexes[i-1]["sex"] = sex;
+    sexes[i-1]["total"] = total;
+    total_count += total;
+  }
+  // console.log(totals);
+
+  // calculate the race percents
+  for (i in sexes)
+  {
+    // console.log(i);
+    sexes[i]["percent"] = (100 * sexes[i]["total"] / total_count)
+  }
+  // console.log(races);
+
+  var svg = d3.select("#sex");
+
+  // Margins
+  var height = svg.attr("height");
+  var width = svg.attr("width");
+  var margin_y = 15;
+  var margin_x = 10;
+  // Wedge size variables
+  var radius = (height - 2*margin_y) / 2;
+  var radius_in = radius/2;
+  var theta_prev = 0;
+
+
+  // Caption
+  var caption = svg.append("text")
+    .attr("x", width/2)
+    .attr("y", height - margin_y/2)
+    .attr("dy","0.3em")
+    .style("text-anchor","middle")
+    .text("Hover over wedges to see information");
+
+  // console.log(races);
+  var thislist = [10,20,30,40]
+  console.log(sexes);
+  // Create wedges
+  var wedges = svg.selectAll("path")
+    .data(sexes) // bind data
+    .enter()
+    .append("path") // Make wedge out of path objects
+    .attr("d", function(d){
+      // Function to calculate wedge shape based on data
+      // console.log(d);
+      // value = 20;
+      value = d["percent"];
+      // Wedge shape
+      var theta_new = value * Math.PI * 2 / 100;
+      var center_x = width/2;
+      var center_y = height/2;
+      var x_0 = radius * Math.sin(theta_prev) + center_x;
+      var y_0 = -1*radius * Math.cos(theta_prev) + center_y;
+      var x_0_in = radius_in * Math.sin(theta_prev) + center_x;
+      var y_0_in = -1*radius_in * Math.cos(theta_prev) + center_y;
+      var x_f = radius * Math.sin(theta_prev + theta_new) + center_x;
+      var y_f = -1*radius * Math.cos(theta_prev + theta_new) + center_y;
+      var x_f_in = radius_in * Math.sin(theta_prev + theta_new) + center_x;
+      var y_f_in = -1*radius_in * Math.cos(theta_prev + theta_new) + center_y;
+      if (theta_new < Math.PI)
+      {
+        var path_string = "M"+x_0+","+y_0+
+                          " A" + radius + "," + radius + " 0 0,1 " + x_f + "," + y_f +
+                          " L"+x_f_in+","+y_f_in +
+                          " A" + radius_in + "," + radius_in + " 0 0,0 " + x_0_in + "," + y_0_in;
+      }
+      else // path needs different of params for theta > 180 degrees
+      {
+        var path_string = "M"+x_0+","+y_0+
+                          " A" + radius + "," + radius + " 0 1,1 " + x_f + "," + y_f +
+                          " L"+x_f_in+","+y_f_in +
+                          " A" + radius_in + "," + radius_in + " 0 1,0 " + x_0_in + "," + y_0_in;
+      }
+      // This is to account for the offset of where to start subsequent wedges
+      theta_prev += theta_new;
+      return path_string;
+    })
+    .attr("fill", function(d){
+      return GLOBAL.color[d["index"]];
+    })
+    .attr("stroke", "#BBBBBB")
+    .attr("stroke-width", "2")
+    .on("mouseover",function(d) {
+      // When mouseover, change wedge color and display caption info
+      this.style.fill = "#778888";
+      caption.text(d["sex"] + ": " + Math.round(d["percent"]) + "%");
+  	})
+    .on("mouseout",function(d) {
+      // Reset to standard color and reset caption
+      this.style.fill = GLOBAL.color[d["index"]];
+      caption.text("Hover over wedges to see information");
+    })
+    .on("click",function(d){
+      // console.log("clicked");
+      // console.log(d["race"]);
+      sex = d["sex"]
+      if (GLOBAL.filterSex.indexOf(sex) > -1)//race in GLOBAL.filterRace)
+      {
+        // console.log("in list");
+        GLOBAL.filterSex.splice(GLOBAL.filterSex.indexOf(sex), 1);
+        this.style.stroke = "#BBBBBB";
+      }
+      else
+      {
+        this.style.stroke = "#000000";
+
+        GLOBAL.filterSex.push(sex);
+      }
+    })
 }
 
 var RACE = {
@@ -166,7 +464,11 @@ var RACE = {
 	"2": "Black",
 	"3": "American Indian",
 	"4": "Asian/Pacific Islander"
+}
 
+var SEX = {
+	"1": "Males",
+	"2": "Females",
 }
 
 var CAUSE = {

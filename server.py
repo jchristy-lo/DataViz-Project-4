@@ -66,8 +66,8 @@ def main (p):
     run(host='0.0.0.0', port=p)
 
 if __name__ == "__main__":
-##    main(8080)
-    if len(sys.argv) > 1:
-        main(int(sys.argv[1]))
-    else:
-        print ("Usage: server <port>")
+    main(8080)
+##    if len(sys.argv) > 1:
+##        main(int(sys.argv[1]))
+##    else:
+##        print ("Usage: server <port>")
