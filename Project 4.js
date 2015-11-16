@@ -2,6 +2,7 @@ window.addEventListener("load", run);
 
 var GLOBAL = { 
         data: [],
+        color: ["cyan","magenta","yellow","darkgrey","white","green"],
         filterSex: [],
         filterRace: [],
         filterCause: [],
@@ -243,6 +244,8 @@ function updateTimeline (data){
 		}
 		d3.select(this).selectAll(".label").remove();
     })
+	
+	})
 }
 
 function getData (sex,race,f) {
