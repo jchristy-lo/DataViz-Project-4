@@ -28,11 +28,11 @@ function run() {
 }
 
 function filter(){
-	if(filterSex.length===0 & filterRace.length===0 & filterCause.length===0){
+	if(GLOBAL.filterSex.length===0 & GLOBAL.filterRace.length===0 & GLOBAL.filterCause.length===0){
 		GLOBAL.fData=GLOBAL.data;
 	}else{
 		fData=[];
-		GLOBAL.fData.data.forEach(function (r) {
+		GLOBAL.fData.forEach(function (r) {
     });
 	}
 }
@@ -48,7 +48,7 @@ function getTotal(data,cause,year) {
     return 0;
 }
 
-function getTotals(data, cause, race, sex, year)
+function getTotals(data, causes, races, sexes, years)
 {
   // GLOBAL.fData.forEach(function(d)
   // {
@@ -56,39 +56,18 @@ function getTotals(data, cause, race, sex, year)
   // })
   console.log("in get totals");
   console.log(GLOBAL.data.data);
-  console.log("cause: " + cause + " race: " + race + " sex: " + sex);
-  // if (GLOBAL.)
+  // console.log("cause: " + cause + " race: " + race + " sex: " + sex);
+  // // if (GLOBAL.)
   var total = 0;
   for (i in GLOBAL.data.data)
   {
     datapt = GLOBAL.data.data[i]
-    console.log(datapt[cause]);
-    console.log(datapt[race]);
-    console.log(datapt[sex]);
-    if (datapt[cause] == cause && datapt[race] == race && datapt[sex] == sex)
+    if (causes.indexOf(""+datapt["cause"]) > -1 && races.indexOf(""+datapt["race"]) > -1 && sexes.indexOf(""+datapt["sex"]) > -1)
     {
-      totals++;
+      total += datapt["total"]
     }
   }
-  // data.forEach(function(datum){
-  //   if(datum["year"]===2003)
-  //   {
-  //     y2003[datum["cause"]] += datum.total;
-  //     if(y2003[datum["cause"]]>maxDeath)
-  //     {
-  //       maxDeath=y2003[datum["cause"]];
-  //     }
-  //   }
-  //   if(datum["year"]===2008)
-  //   {
-  //     y2008[datum["cause"]] += datum.total;
-  //     if(y2008[datum["cause"]]>maxDeath){maxDeath=y2008[datum["cause"]];}
-  //   }
-  //   if(datum["year"]===2013){
-  //   y2013[datum["cause"]] += datum.total;
-  //   if(y2003[datum["cause"]]>maxDeath){maxDeath=y2003[datum["cause"]];}
-  //   }
-  // })
+  console.log(total);
 }
 
 function timelineView (data){
@@ -195,7 +174,7 @@ function getData (sex,race,f) {
 
 function updateRaceView()
 {
-  // getTotals(GLOBAL.data, "1", "1", "M", "2003");
+  getTotals(GLOBAL.data, GLOBAL.filterCause, GLOBAL.filterRace, GLOBAL.filterSex, ["2003"]);
   // Calculate race totals
   var races = []
   var total_count = 0
@@ -314,19 +293,21 @@ function updateRaceView()
     .on("click",function(d){
       // console.log("clicked");
       // console.log(d["race"]);
-      race = d["race"]
-      if (GLOBAL.filterRace.indexOf(race) > -1)//race in GLOBAL.filterRace)
+      race = d["index"]
+      if (d3.select(this).attr("class") === "unclicked")
       {
         // console.log("in list");
+        d3.select(this).attr("class","clicked");
         GLOBAL.filterRace.splice(GLOBAL.filterRace.indexOf(race), 1);
         this.style.stroke = "#BBBBBB";
       }
       else
       {
+        d3.select(this).attr("class","unclicked");
         this.style.stroke = "#000000";
-
         GLOBAL.filterRace.push(race);
       }
+      console.log(GLOBAL.filterRace);
     })
 }
 
@@ -442,7 +423,7 @@ function updateSexView()
     .on("click",function(d){
       // console.log("clicked");
       // console.log(d["race"]);
-      sex = d["sex"]
+      sex = d["index"] + 1
       if (GLOBAL.filterSex.indexOf(sex) > -1)//race in GLOBAL.filterRace)
       {
         // console.log("in list");
@@ -455,6 +436,8 @@ function updateSexView()
 
         GLOBAL.filterSex.push(sex);
       }
+      // filter()
+      console.log(GLOBAL.filterSex);
     })
 }
 
