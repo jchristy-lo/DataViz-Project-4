@@ -6,6 +6,8 @@ var GLOBAL = {
         filterSex: [],
         filterRace: [],
         filterCause: [],
+        clickedRace: [],
+        clickedSex: [],
         fData: {}
 }
 
@@ -20,39 +22,54 @@ function run() {
 
     getData("","",function(data) {
     	GLOBAL.data=data;
+      filter()
     	updateTimeline(data.data);
-        updateRaceView();
-        updateSexView();
-       });
-}
-
-function filter(){
-	if(GLOBAL.filterSex.length===0 & GLOBAL.filterRace.length===0 & GLOBAL.filterCause.length===0){
-		GLOBAL.fData=GLOBAL.data;
-	}else{
-		fData=[];
-		GLOBAL.fData.forEach(function (r) {
+      updateRaceView();
+      updateSexView();
     });
-	}
 }
 
-function getTotal(data,cause,year) {
-  if (cause in data) {
-  	if (year in data[cause]) {
-  	  if (data[cause][year].length > 0) {
-  		  return data[cause][year][0].total;
-  	  }
-  	}
+function filter()
+{
+  // Fill the filter arryas appropriately
+  if (GLOBAL.clickedSex.length===0) // If nothing is selected, everything is shown
+  {
+    GLOBAL.filterSex = ["M", "F"];
   }
-    return 0;
+  else
+  {
+    GLOBAL.filterSex = GLOBAL.clickedSex;
+  }
+  if (GLOBAL.clickedRace.length===0)// & GLOBAL.filterRace.length===0 & GLOBAL.filterCause.length===0)
+  {
+    GLOBAL.filterRace = Object.keys(RACE);
+  }
+  else
+  {
+    GLOBAL.filterRace = GLOBAL.clickedRace;
+  }
+  if (GLOBAL.filterCause.length===0)// & GLOBAL.filterRace.length===0 & GLOBAL.filterCause.length===0)
+  {
+    GLOBAL.filterCause = Object.keys(CAUSE);
+  }
 }
 
+
+// Clear the existing visualization
+function clear_viz(viz_name)
+{
+  var svg = document.getElementById(viz_name);
+  // Delete all elements in the svg
+  while (svg.lastChild)
+  {
+      svg.removeChild(svg.lastChild);
+  }
+}
+
+// Get the total number of people satifying all the following criteria
+// Takes in arrays of all of these
 function getTotals(data, causes, races, sexes, years)
 {
-  console.log("in get totals");
-  console.log(GLOBAL.data.data);
-  // console.log("cause: " + cause + " race: " + race + " sex: " + sex);
-  // // if (GLOBAL.)
   var total = 0;
   for (i in GLOBAL.data.data)
   {
@@ -62,7 +79,7 @@ function getTotals(data, causes, races, sexes, years)
       total += datapt["total"]
     }
   }
-  console.log(total);
+  return total;
 }
 
 function updateTimeline (data){
@@ -252,37 +269,37 @@ function getData (sex,race,f) {
 	     });
 }
 
-
+// Called to update the race view, based on the filters specified in
+// GLOBAL.filterSex and GLOBAL.filterCause
 function updateRaceView()
 {
-  getTotals(GLOBAL.data, GLOBAL.filterCause, GLOBAL.filterRace, GLOBAL.filterSex, ["2003"]);
+  clear_viz("race") // Clear the existing viz
+
   // Calculate race totals
   var races = []
   var total_count = 0
-  for (i in RACE)
+  for (var i = 0; i < Object.keys(RACE).length; i++)
   {
-    // console.log(i);
     var race = RACE[i]
-    // console.log(race);
-    var total = 50*i // the actual total
+    placeholder = "" + i
 
-    // console.log(total);
+    var total = getTotals(GLOBAL.data, GLOBAL.filterCause, [placeholder], GLOBAL.filterSex, ["2003", "2008", "2013"])
+
+    // Set up the json with data to create the viz
     races[i] = {}
     races[i]["index"] = i;
     races[i]["race"] = race;
     races[i]["total"] = total;
     total_count += total;
   }
-  // console.log(totals);
 
   // calculate the race percents
   for (i in races)
   {
-    // console.log(i);
     races[i]["percent"] = (100 * races[i]["total"] / total_count)
   }
-  // console.log(races);
 
+  // Draw
   var svg = d3.select("#race");
 
   // Margins
@@ -295,17 +312,6 @@ function updateRaceView()
   var radius_in = radius/2;
   var theta_prev = 0;
 
-  // console.log(height);
-
-  // // Title
-  // svg.append("text")
-  //   .attr("id","title")
-  //   .attr("x", width/2)
-  //   .attr("y", margin_y/2)
-  //   .attr("dy","0.3em")
-  //   .style("text-anchor","middle")
-  //   .text(question);
-
   // Caption
   var caption = svg.append("text")
     .attr("x", width/2)
@@ -314,8 +320,6 @@ function updateRaceView()
     .style("text-anchor","middle")
     .text("Hover over wedges to see information");
 
-  // console.log(races);
-  var thislist = [10,20,30,40]
   // Create wedges
   var wedges = svg.selectAll("path")
     .data(races) // bind data
@@ -323,8 +327,6 @@ function updateRaceView()
     .append("path") // Make wedge out of path objects
     .attr("d", function(d){
       // Function to calculate wedge shape based on data
-      // console.log(d);
-      // value = 20;
       value = d["percent"];
       // Wedge shape
       var theta_new = value * Math.PI * 2 / 100;
@@ -372,55 +374,68 @@ function updateRaceView()
       caption.text("Hover over wedges to see information");
     })
     .on("click",function(d){
-      // console.log("clicked");
-      // console.log(d["race"]);
-      race = d["index"]
-      if (d3.select(this).attr("class") === "unclicked")
+      race = "" + d["index"]
+      if (GLOBAL.clickedRace.indexOf(race) > -1)
       {
-        // console.log("in list");
+        // Add this race to the filter
         d3.select(this).attr("class","clicked");
-        GLOBAL.filterRace.splice(GLOBAL.filterRace.indexOf(race), 1);
+        GLOBAL.clickedRace.splice(GLOBAL.clickedRace.indexOf(race), 1);
+        filter()
+        // updateTimeline(GLOBAL.data.data)
+        updateSexView()
         this.style.stroke = "#BBBBBB";
       }
       else
       {
+        // Remove this race from the filter
         d3.select(this).attr("class","unclicked");
         this.style.stroke = "#000000";
-        GLOBAL.filterRace.push(race);
+        GLOBAL.clickedRace.push(race);
+        filter()
+        // updateTimeline(GLOBAL.data)
+        updateSexView()
       }
-      console.log(GLOBAL.filterRace);
     })
 }
 
+// updates the sex view based on the contents of
+// filterRace and filterCause
 function updateSexView()
 {
-  // getTotals(GLOBAL.data, "1", "1", "M", "2003");
+  clear_viz("sex")
+
   // Calculate race totals
   var sexes = []
   var total_count = 0
-  for (i in SEX)
+  for (var i = 0; i < Object.keys(SEX).length; i++)
   {
-    // console.log(i);
-    var sex = SEX[i]
-    // console.log(race);
-    var total = 50*i // the actual total
+    var sex = SEX[i+1]
 
-    // console.log(total);
-    sexes[i-1] = {}
-    sexes[i-1]["index"] = i-1;
-    sexes[i-1]["sex"] = sex;
-    sexes[i-1]["total"] = total;
+    // This is because the data stores sex as "M" and "F"
+    var sexabbrev
+    if (i == 0)
+    {
+      sexabbrev = "M"
+    }
+    else if (i == 1)
+    {
+      sexabbrev = "F"
+    }
+
+    var total = getTotals(GLOBAL.data, GLOBAL.filterCause, GLOBAL.filterRace, [sexabbrev], ["2003", "2008", "2013"])
+
+    sexes[i] = {}
+    sexes[i]["index"] = i;
+    sexes[i]["sex"] = sex;
+    sexes[i]["total"] = total;
     total_count += total;
   }
-  // console.log(totals);
 
   // calculate the race percents
   for (i in sexes)
   {
-    // console.log(i);
     sexes[i]["percent"] = (100 * sexes[i]["total"] / total_count)
   }
-  // console.log(races);
 
   var svg = d3.select("#sex");
 
@@ -434,7 +449,6 @@ function updateSexView()
   var radius_in = radius/2;
   var theta_prev = 0;
 
-
   // Caption
   var caption = svg.append("text")
     .attr("x", width/2)
@@ -443,9 +457,6 @@ function updateSexView()
     .style("text-anchor","middle")
     .text("Hover over wedges to see information");
 
-  // console.log(races);
-  var thislist = [10,20,30,40]
-  console.log(sexes);
   // Create wedges
   var wedges = svg.selectAll("path")
     .data(sexes) // bind data
@@ -453,8 +464,6 @@ function updateSexView()
     .append("path") // Make wedge out of path objects
     .attr("d", function(d){
       // Function to calculate wedge shape based on data
-      // console.log(d);
-      // value = 20;
       value = d["percent"];
       // Wedge shape
       var theta_new = value * Math.PI * 2 / 100;
@@ -502,23 +511,34 @@ function updateSexView()
       caption.text("Hover over wedges to see information");
     })
     .on("click",function(d){
-      // console.log("clicked");
-      // console.log(d["race"]);
-      sex = d["index"] + 1
-      if (GLOBAL.filterSex.indexOf(sex) > -1)//race in GLOBAL.filterRace)
+      sex = "" + (d["index"] + 1)
+      var sexabbrev
+      if (d["index"] == 0)
       {
-        // console.log("in list");
-        GLOBAL.filterSex.splice(GLOBAL.filterSex.indexOf(sex), 1);
+        sexabbrev = "M"
+      }
+      else if (d["index"] == 1)
+      {
+        sexabbrev = "F"
+      }
+      if (GLOBAL.clickedSex.indexOf(sexabbrev) > -1)
+      {
+        d3.select(this).attr("class","clicked");
+        GLOBAL.clickedSex.splice(GLOBAL.clickedSex.indexOf(sex), 1);
+        filter()
+        // updateTimeline(GLOBAL.data.data)
+        updateRaceView()
         this.style.stroke = "#BBBBBB";
       }
       else
       {
+        d3.select(this).attr("class","unclicked");
         this.style.stroke = "#000000";
-
-        GLOBAL.filterSex.push(sex);
+        GLOBAL.clickedSex.push(sexabbrev);
+        filter()
+        // updateTimeline(GLOBAL.data)
+        updateRaceView()
       }
-      // filter()
-      console.log(GLOBAL.filterSex);
     })
 }
 
