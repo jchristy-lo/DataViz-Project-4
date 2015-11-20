@@ -180,8 +180,14 @@ function updateTimeline (data){
 		.attr("y1",y(y2003[cause]))
 		.attr("x2",x2008)
 		.attr("y2",y(y2008[cause]))
-		.attr("x3",x2013)
-		.attr("y3",y(y2013[cause]))
+		.style("stroke","red")
+		.style("stroke-width","6px");
+
+	g.append("line")
+    	.attr("x1",x2008)
+		.attr("y1",y(y2008[cause]))
+		.attr("x2",x2013)
+		.attr("y2",y(y2013[cause]))
 		.style("stroke","red")
 		.style("stroke-width","6px");
 
@@ -190,6 +196,15 @@ function updateTimeline (data){
 			d3.select(this).selectAll("line").style("stroke","lightblue");
 			d3.select(this).selectAll("circle").style("fill","lightblue");
 		}
+
+		d3.select(this)
+		    .append("text")
+		    .attr("class","label")
+		    .attr("x",+svg.attr("width")*1/9+10)
+		    .attr("y", y(y2003[cause]))
+		    .attr("dy","0.25em")
+		    .style("stroke","black")
+		    .text(CAUSE[cause])
 
 		d3.select(this)
 		    .append("text")
@@ -217,7 +232,7 @@ function updateTimeline (data){
 		    .attr("y", y(y2013[cause])+10)
 		    .attr("font-size", "10px")
 		    .style("stroke","black")
-		    .text(y2013[cause]+" deaths")
+		    .text(y2013[cause]+"\n deaths")
 	     })
 
     .on("click",function(){
@@ -227,8 +242,8 @@ function updateTimeline (data){
 			d3.select(this).selectAll("circle").style("fill","blue");
 			d3.select(this).attr("class","clicked");
 			filter();
-			// updateSex();
-			// updateRace();
+			updateSex();
+			updateRace();
 		}else{
 			GLOBAL.filterCause.splice(GLOBAL.filterCause.indexOf(cause), 1);
 			d3.select(this).attr("class","unclicked");
