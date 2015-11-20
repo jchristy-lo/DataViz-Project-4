@@ -8,7 +8,7 @@ var GLOBAL = {
         filterCause: [],
         clickedRace: [],
         clickedSex: [],
-        fData: {}
+        fData: []
 }
 
 function run() {
@@ -22,8 +22,9 @@ function run() {
 
     getData("","",function(data) {
     	GLOBAL.data=data;
-      filter()
-    	updateTimeline(data.data);
+      GLOBAL.fData=GLOBAL.data.data;
+    	updateTimeline();
+      filter();
       updateRaceView();
       updateSexView();
     });
@@ -31,29 +32,31 @@ function run() {
 
 function filter()
 {
-  // Fill the filter arryas appropriately
-  if (GLOBAL.clickedSex.length===0) // If nothing is selected, everything is shown
-  {
+  // Fill the filter arrays appropriately
+  if (GLOBAL.clickedSex.length===0){ // If nothing is selected, everything is shown
     GLOBAL.filterSex = ["M", "F"];
-  }
-  else
-  {
+  }else{
     GLOBAL.filterSex = GLOBAL.clickedSex;
   }
-  if (GLOBAL.clickedRace.length===0)// & GLOBAL.filterRace.length===0 & GLOBAL.filterCause.length===0)
-  {
+  if (GLOBAL.clickedRace.length===0){
     GLOBAL.filterRace = Object.keys(RACE);
-  }
-  else
-  {
+  }else{
     GLOBAL.filterRace = GLOBAL.clickedRace;
   }
-  if (GLOBAL.filterCause.length===0)// & GLOBAL.filterRace.length===0 & GLOBAL.filterCause.length===0)
-  {
+  if (GLOBAL.filterCause.length===0){
     GLOBAL.filterCause = Object.keys(CAUSE);
   }
-}
 
+  GLOBAL.data.data.forEach(function(datum){
+    if(datum["race"] in GLOBAL.filterRace){
+      if(""+datum["cause"] in GLOBAL.filterCause){
+        if(GLOBAL.filterSex.indexOf(datum["sex"])>-1){
+            GLOBAL.fData.push(datum);
+        }
+      }
+    }
+    })
+}
 
 // Clear the existing visualization
 function clear_viz(viz_name)
@@ -82,8 +85,11 @@ function getTotals(data, causes, races, sexes, years)
   return total;
 }
 
-function updateTimeline (data){
+function updateTimeline (){
+
 	var svg = d3.select("#timeline");
+  svg.selectAll('*').remove();
+  GLOBAL.filterCause=[];
 
 	svg.append("text")
 	    .attr("x",+svg.attr("width")*1/2)
@@ -138,7 +144,7 @@ function updateTimeline (data){
 
     var maxDeath = 0
 
-    data.forEach(function(datum){
+    GLOBAL.fData.forEach(function(datum){
 	    if(datum["year"]===2003){
 	    	y2003[datum["cause"]] += datum.total;
 	    	if(y2003[datum["cause"]]>maxDeath){maxDeath=y2003[datum["cause"]];}
@@ -241,19 +247,20 @@ function updateTimeline (data){
 
     .on("click",function(){
     	if(d3.select(this).attr("class")==="unclicked"){
-	    	GLOBAL.filterCause.push(cause);
+        if(GLOBAL.filterCause.length===42){GLOBAL.filterCause=[];}
+	    	GLOBAL.filterCause.push(""+cause);
 	    	d3.select(this).selectAll("line").style("stroke","blue");
-			d3.select(this).selectAll("circle").style("fill","blue");
-			d3.select(this).attr("class","clicked");
-			filter();
-			updateSex();
-			updateRace();
-		}else{
-			GLOBAL.filterCause.splice(GLOBAL.filterCause.indexOf(cause), 1);
-			d3.select(this).attr("class","unclicked");
-			d3.select(this).selectAll("line").style("stroke","red");
-			d3.select(this).selectAll("circle").style("fill","red");
-		}
+  			d3.select(this).selectAll("circle").style("fill","blue");
+  			d3.select(this).attr("class","clicked");
+  		}else{
+  			GLOBAL.filterCause.splice(GLOBAL.filterCause.indexOf(cause), 1);
+  			d3.select(this).attr("class","unclicked");
+  			d3.select(this).selectAll("line").style("stroke","red");
+  			d3.select(this).selectAll("circle").style("fill","red");
+  		}
+      filter();
+      updateSexView();
+      updateRaceView();
     })
 
 	.on("mouseout",function() {
@@ -396,7 +403,7 @@ function updateRaceView()
         d3.select(this).attr("class","clicked");
         GLOBAL.clickedRace.splice(GLOBAL.clickedRace.indexOf(race), 1);
         filter()
-        // updateTimeline(GLOBAL.data.data)
+        updateTimeline()
         updateSexView()
         this.style.stroke = "#BBBBBB";
       }
@@ -407,7 +414,7 @@ function updateRaceView()
         this.style.stroke = "#000000";
         GLOBAL.clickedRace.push(race);
         filter()
-        // updateTimeline(GLOBAL.data)
+        updateTimeline()
         updateSexView()
       }
     })
@@ -415,8 +422,7 @@ function updateRaceView()
 
 // updates the sex view based on the contents of
 // filterRace and filterCause
-function updateSexView()
-{
+function updateSexView(){
   clear_viz("sex")
 
   // Calculate race totals
@@ -541,7 +547,7 @@ function updateSexView()
         d3.select(this).attr("class","clicked");
         GLOBAL.clickedSex.splice(GLOBAL.clickedSex.indexOf(sex), 1);
         filter()
-        // updateTimeline(GLOBAL.data.data)
+        updateTimeline()
         updateRaceView()
         this.style.stroke = "#BBBBBB";
       }
@@ -551,7 +557,7 @@ function updateSexView()
         this.style.stroke = "#000000";
         GLOBAL.clickedSex.push(sexabbrev);
         filter()
-        // updateTimeline(GLOBAL.data)
+        updateTimeline()
         updateRaceView()
       }
     })
