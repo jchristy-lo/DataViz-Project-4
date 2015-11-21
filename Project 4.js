@@ -32,6 +32,7 @@ function run() {
 
 function filter()
 {
+  GLOBAL.fData=[];
   // Fill the filter arrays appropriately
   if (GLOBAL.clickedSex.length===0){ // If nothing is selected, everything is shown
     GLOBAL.filterSex = ["M", "F"];
@@ -305,7 +306,10 @@ function updateTimeline(){
 
     var maxDeath = 0
 
-    GLOBAL.fData.forEach(function(datum){
+    GLOBAL.data.data.forEach(function(datum){
+      if(GLOBAL.filterRace.indexOf(datum["race"])>-1){
+        if(GLOBAL.filterSex.indexOf(datum["sex"])>-1){
+
       if(datum["year"]===2003){
         y2003[datum["cause"]] += datum.total;
         if(y2003[datum["cause"]]>maxDeath){maxDeath=y2003[datum["cause"]];}
@@ -318,37 +322,38 @@ function updateTimeline(){
         y2013[datum["cause"]] += datum.total;
         if(y2003[datum["cause"]]>maxDeath){maxDeath=y2003[datum["cause"]];}
       }
+    }}
     })
 
     GLOBAL.data["causes"].forEach(function(cause){
 
     var g = svg.select("#c"+cause);
 
-  g.select("#deaths03")
-    .transition()
-    .attr("cy",y(y2003[cause]));
+    g.select("#deaths03")
+      .transition()
+      .attr("cy",y(y2003[cause]));
 
-  g.select("#deaths08")
-    .transition()
-    .attr("cy",y(y2008[cause]));
+    g.select("#deaths08")
+      .transition()
+      .attr("cy",y(y2008[cause]));
 
-  g.select("#deaths13")
-    .transition()
-    .attr("cy",y(y2013[cause]));
+    g.select("#deaths13")
+      .transition()
+      .attr("cy",y(y2013[cause]));
 
-  g.select("#line38")
-    .transition()
-    .attr("x1",x2003)
-    .attr("y1",y(y2003[cause]))
-    .attr("x2",x2008)
-    .attr("y2",y(y2008[cause]))
+    g.select("#line38")
+      .transition()
+      .attr("x1",x2003)
+      .attr("y1",y(y2003[cause]))
+      .attr("x2",x2008)
+      .attr("y2",y(y2008[cause]))
 
-  g.select("#line83")
-    .transition()
-    .attr("x1",x2008)
-    .attr("y1",y(y2008[cause]))
-    .attr("x2",x2013)
-    .attr("y2",y(y2013[cause]))
+    g.select("#line83")
+      .transition()
+      .attr("x1",x2008)
+      .attr("y1",y(y2008[cause]))
+      .attr("x2",x2013)
+      .attr("y2",y(y2013[cause]))
 
     g.on("mouseover",function () {
       if(d3.select(this).attr("class")==="unclicked"){
