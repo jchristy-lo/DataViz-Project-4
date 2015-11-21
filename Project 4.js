@@ -511,7 +511,17 @@ function updateRaceView()
     .attr("fill", function(d){
       return GLOBAL.color[d["index"]];
     })
-    .attr("stroke", "#BBBBBB")
+    .attr("stroke", function(d){
+      race = "" + d["index"];
+      if (GLOBAL.clickedRace.indexOf(race) > -1)
+      {
+        this.style.stroke = "#000000";
+      }
+      else
+      {
+        this.style.stroke = "#BBBBBB";
+      }
+    })
     .attr("stroke-width", "2")
     .on("mouseover",function(d) {
       // When mouseover, change wedge color and display caption info
@@ -647,7 +657,26 @@ function updateSexView(){
     .attr("fill", function(d){
       return GLOBAL.color[d["index"]];
     })
-    .attr("stroke", "#BBBBBB")
+    .attr("stroke", function(d){
+      sex = "" + (d["index"] + 1)
+      var sexabbrev
+      if (d["index"] == 0)
+      {
+        sexabbrev = "M"
+      }
+      else if (d["index"] == 1)
+      {
+        sexabbrev = "F"
+      }
+      if (GLOBAL.clickedSex.indexOf(sexabbrev) > -1)
+      {
+        this.style.stroke = "#000000";
+      }
+      else
+      {
+        this.style.stroke = "#BBBBBB";
+      }
+    })
     .attr("stroke-width", "2")
     .on("mouseover",function(d) {
       // When mouseover, change wedge color and display caption info
