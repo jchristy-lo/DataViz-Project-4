@@ -23,7 +23,7 @@ function run() {
     getData("","",function(data) {
     	GLOBAL.data=data;
       GLOBAL.fData=GLOBAL.data.data;
-    	updateTimeline();
+    	genTimeline();
       filter();
       updateRaceView();
       updateSexView();
@@ -85,7 +85,7 @@ function getTotals(data, causes, races, sexes, years)
   return total;
 }
 
-function updateTimeline (){
+function genTimeline(){
 
 	var svg = d3.select("#timeline");
   svg.selectAll('*').remove();
@@ -163,8 +163,10 @@ function updateTimeline (){
 
     var g = svg.append("g")
     g.attr("class","unclicked");
+    g.attr("id","c"+cause);
 
 	g.append("circle")
+    .attr("id","deaths03")
 		.attr("cx",x2003)
 		.attr("cy",y(y2003[cause]))
 		.attr("r","5")
@@ -172,6 +174,7 @@ function updateTimeline (){
 		.style("stroke","none");
 
     g.append("circle")
+    .attr("id","deaths08")
 		.attr("cx",x2008)
 		.attr("cy",y(y2008[cause]))
 		.attr("r","5")
@@ -179,6 +182,7 @@ function updateTimeline (){
 		.style("stroke","none");
 
     g.append("circle")
+    .attr("id","deaths13")
 		.attr("cx",x2013)
 		.attr("cy",y(y2013[cause]))
 		.attr("r","5")
@@ -186,7 +190,8 @@ function updateTimeline (){
 		.style("stroke","none");
 
     g.append("line")
-    	.attr("x1",x2003)
+    .attr("id","line38")
+    .attr("x1",x2003)
 		.attr("y1",y(y2003[cause]))
 		.attr("x2",x2008)
 		.attr("y2",y(y2008[cause]))
@@ -194,6 +199,7 @@ function updateTimeline (){
 		.style("stroke-width","6px");
 
 	g.append("line")
+  .attr("id","line83")
     	.attr("x1",x2008)
 		.attr("y1",y(y2008[cause]))
 		.attr("x2",x2013)
@@ -272,6 +278,123 @@ function updateTimeline (){
     })
 
 	})
+}
+
+function updateTimeline(){
+
+  var svg = d3.select("#timeline");
+
+  // note: the width attribute holds strings
+    var x2003 = +svg.attr("width")*1/9;
+    var x2008 = +svg.attr("width")*1/2;
+    var x2013 = +svg.attr("width")*8/9;
+
+  var y = function(deaths){
+      return ((+svg.attr("height")-20)-deaths/maxDeath*(+svg.attr("height")-50));
+    }
+
+  var y2003 = {};
+  var y2008 = {};
+  var y2013 = {};
+
+  GLOBAL.data["causes"].forEach(function(cause){
+      y2003[cause] = 0;
+      y2008[cause] = 0;
+      y2013[cause] = 0;
+    })
+
+    var maxDeath = 0
+
+    GLOBAL.fData.forEach(function(datum){
+      if(datum["year"]===2003){
+        y2003[datum["cause"]] += datum.total;
+        if(y2003[datum["cause"]]>maxDeath){maxDeath=y2003[datum["cause"]];}
+      }
+      if(datum["year"]===2008){
+        y2008[datum["cause"]] += datum.total;
+        if(y2008[datum["cause"]]>maxDeath){maxDeath=y2008[datum["cause"]];}
+      }
+      if(datum["year"]===2013){
+        y2013[datum["cause"]] += datum.total;
+        if(y2003[datum["cause"]]>maxDeath){maxDeath=y2003[datum["cause"]];}
+      }
+    })
+
+    GLOBAL.data["causes"].forEach(function(cause){
+
+    var g = svg.select("#c"+cause);
+
+  g.select("#deaths03")
+    .transition()
+    .attr("cy",y(y2003[cause]));
+
+  g.select("#deaths08")
+    .transition()
+    .attr("cy",y(y2008[cause]));
+
+  g.select("#deaths13")
+    .transition()
+    .attr("cy",y(y2013[cause]));
+
+  g.select("#line38")
+    .transition()
+    .attr("x1",x2003)
+    .attr("y1",y(y2003[cause]))
+    .attr("x2",x2008)
+    .attr("y2",y(y2008[cause]))
+
+  g.select("#line83")
+    .transition()
+    .attr("x1",x2008)
+    .attr("y1",y(y2008[cause]))
+    .attr("x2",x2013)
+    .attr("y2",y(y2013[cause]))
+
+    g.on("mouseover",function () {
+      if(d3.select(this).attr("class")==="unclicked"){
+      d3.select(this).selectAll("line").style("stroke","lightblue");
+      d3.select(this).selectAll("circle").style("fill","lightblue");
+    }
+
+    d3.select(this)
+        .append("text")
+        .attr("class","label")
+        .attr("x",+svg.attr("width")*1/9+10)
+        .attr("y", y(y2003[cause]))
+        .attr("dy","0.25em")
+        .style("stroke","black")
+        .text(CAUSE[cause])
+
+    d3.select(this)
+        .append("text")
+        .attr("class","label")
+        .attr("x",+svg.attr("width")*1/9)
+        .attr("y", y(y2003[cause])+10)
+        .attr("dy","0.25em")
+        .attr("font-size", "10px")
+        .style("stroke","black")
+        .text(y2003[cause]+" deaths")
+
+    d3.select(this)
+        .append("text")
+        .attr("class","label")
+        .attr("x",+svg.attr("width")*1/2)
+        .attr("y", y(y2008[cause])+10)
+        .attr("font-size", "10px")
+        .style("stroke","black")
+        .text(y2008[cause]+" deaths")
+
+    d3.select(this)
+        .append("text")
+        .attr("class","label")
+        .attr("x",+svg.attr("width")*8/9)
+        .attr("y", y(y2013[cause])+10)
+        .attr("font-size", "10px")
+        .style("stroke","black")
+        .text(y2013[cause]+"\n deaths")
+       })
+
+  })
 }
 
 function getData (sex,race,f) {
