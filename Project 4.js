@@ -320,7 +320,7 @@ function updateTimeline(){
       }
       if(datum["year"]===2013){
         y2013[datum["cause"]] += datum.total;
-        if(y2003[datum["cause"]]>maxDeath){maxDeath=y2003[datum["cause"]];}
+        if(y2013[datum["cause"]]>maxDeath){maxDeath=y2013[datum["cause"]];}
       }
     }}
     })
